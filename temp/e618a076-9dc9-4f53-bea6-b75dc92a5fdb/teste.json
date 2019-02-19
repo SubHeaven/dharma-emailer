@@ -1,0 +1,10 @@
+{
+    "dest": "subheaven.paulo@gmail.com",
+    "subject": "A Hello From Dharma Email",
+    "template": "teste",
+    "data": {
+        "codigo": 333,
+        "nome": "SubHeaven",
+        "valor": 745.29
+    }
+}

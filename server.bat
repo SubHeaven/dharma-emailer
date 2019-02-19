@@ -1,0 +1,1 @@
+SET DEBUG=dharma-email:* & npm start

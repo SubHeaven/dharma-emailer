@@ -1,0 +1,8 @@
+{
+    "host": "mail.exchange.locaweb.com.br",
+    "port": 587,
+    "ssl": false,
+    "name": "Soma Contabilidade",
+    "user": "faturamento@somacontabilidades.com.br",
+    "pass": "soma@202010"
+}
