@@ -2,7 +2,7 @@
 
 ## Bem vindo ao Dharma Emailer. Seu servidor para envio de emails.
 
-Configurar servidor
+### Configurar servidor
 
 Modelo do arquivo de configuração:
 
