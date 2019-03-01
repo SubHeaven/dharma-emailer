@@ -1,3 +1,4 @@
+var bodyParser = require('body-parser');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
@@ -12,6 +13,7 @@ var sendRouterTeste = require('./routes/senderteste');
 var app = express();
 
 //app.use(logger('dev'));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.urlencoded({
     extended: false

@@ -10,12 +10,12 @@ var dharmaEmail = {};
 
 dharmaEmail.transporter = null;
 
-dharmaEmail.configSender = function() {
+dharmaEmail.configSender = function () {
     dharmaEmail.transporter = nodeMailer.createTransport({
         host: config.host,
         //port: 995,
         port: config.port,
-        ssl: config.secure,  //true for 465 port, false for other ports
+        ssl: config.secure, //true for 465 port, false for other ports
         auth: {
             user: config.user,
             pass: config.pass
@@ -24,12 +24,11 @@ dharmaEmail.configSender = function() {
 }
 dharmaEmail.configSender();
 
-dharmaEmail.processTemplate = function(template, data) {
+dharmaEmail.processTemplate = function (template, data) {
     try {
         _tpath = path.resolve(__dirname, "..", "templates", template + ".html");
         var _text = fs.readFileSync(_tpath, 'utf8');
         _html = _text.toString();
-        console.log(_html);
         for (_k in data) {
             _t = "{<" + _k + ">}";
             while (_html.indexOf(_t) > -1) {
@@ -37,7 +36,7 @@ dharmaEmail.processTemplate = function(template, data) {
             }
         }
         return _html;
-    } catch(e) {
+    } catch (e) {
         console.log('Error:', e.stack);
         return "";
     }
@@ -47,36 +46,38 @@ router.get('/', function (req, res, next) {
     res.send("<b>Como testar</b><br>curl -X POST -H \"Content-Type: application/json\" --data @teste.json http://127.0.0.1:2560/send")
 });
 
-dharmaEmail.mkDirByPathSync = function(targetDir, { isRelativeToScript = false } = {}) {
+dharmaEmail.mkDirByPathSync = function (targetDir, {
+    isRelativeToScript = false
+} = {}) {
     const sep = path.sep;
     const initDir = path.isAbsolute(targetDir) ? sep : '';
     const baseDir = isRelativeToScript ? __dirname : '.';
-  
-    return targetDir.split(sep).reduce((parentDir, childDir) => {
-      const curDir = path.resolve(baseDir, parentDir, childDir);
-      try {
-        fs.mkdirSync(curDir);
-      } catch (err) {
-        if (err.code === 'EEXIST') { // curDir already exists!
-          return curDir;
-        }
-  
-        // To avoid `EISDIR` error on Mac and `EACCES`-->`ENOENT` and `EPERM` on Windows.
-        if (err.code === 'ENOENT') { // Throw the original parentDir error on curDir `ENOENT` failure.
-          throw new Error(`EACCES: permission denied, mkdir '${parentDir}'`);
-        }
-  
-        const caughtErr = ['EACCES', 'EPERM', 'EISDIR'].indexOf(err.code) > -1;
-        if (!caughtErr || caughtErr && targetDir === curDir) {
-          throw err; // Throw if it's just the last created dir.
-        }
-      }
-  
-      return curDir;
-    }, initDir);
-  }
 
-  dharmaEmail.checkPath = function (pathname) {
+    return targetDir.split(sep).reduce((parentDir, childDir) => {
+        const curDir = path.resolve(baseDir, parentDir, childDir);
+        try {
+            fs.mkdirSync(curDir);
+        } catch (err) {
+            if (err.code === 'EEXIST') { // curDir already exists!
+                return curDir;
+            }
+
+            // To avoid `EISDIR` error on Mac and `EACCES`-->`ENOENT` and `EPERM` on Windows.
+            if (err.code === 'ENOENT') { // Throw the original parentDir error on curDir `ENOENT` failure.
+                throw new Error(`EACCES: permission denied, mkdir '${parentDir}'`);
+            }
+
+            const caughtErr = ['EACCES', 'EPERM', 'EISDIR'].indexOf(err.code) > -1;
+            if (!caughtErr || caughtErr && targetDir === curDir) {
+                throw err; // Throw if it's just the last created dir.
+            }
+        }
+
+        return curDir;
+    }, initDir);
+}
+
+dharmaEmail.checkPath = function (pathname) {
     if (!fs.existsSync(pathname)) {
         console.log("");
         console.log("Creating folder " + pathname);
@@ -84,9 +85,9 @@ dharmaEmail.mkDirByPathSync = function(targetDir, { isRelativeToScript = false }
     }
 }
 
-router.normalizeFilename = function(_str) {
+router.normalizeFilename = function (_str) {
     _notallowed = "áàâãäÁÀÂÃÄéèêëÉÈÊËíìîïÍÌÎÏóòôõöÓÒÔÕÖúùûüÚÙÛÜçÇ";
-    _allowed    = "aaaaaAAAAAeeeeEEEEiiiiIIIIoooooOOOOOuuuuUUUUcC";
+    _allowed = "aaaaaAAAAAeeeeEEEEiiiiIIIIoooooOOOOOuuuuUUUUcC";
     result = "";
     for (var i = 0; i < _str.length; i++) {
         let _ai = _notallowed.indexOf(_str.charAt(i));
@@ -99,44 +100,68 @@ router.normalizeFilename = function(_str) {
     return result;
 }
 
-dharmaEmail.sendEmailWithAttachment = function(res, _request, files) {
-    _html = dharmaEmail.processTemplate(_request.template, _request.data);
+dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "") {
+    _html = "";
+    if (html == "") {
+        _html = dharmaEmail.processTemplate(_request.template, _request.data);
+    } else {
+        try {
+            let _df = fs.readFileSync(html, 'utf8');
+            _html = _df.toString();
+        } catch (e) {
+            console.log('Error:', e.stack);
+        }
+    }
 
+    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    console.log(JSON.stringify(_request, null, 4))
+    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
     let mailOptions = {
         from: '"' + config.name + '" <' + config.user + '>', // sender address
         to: _request.dest, // list of receivers
         subject: _request.subject, // Subject line
-        html: _html // html body
+        html: _html, // html body
+        dsn: {
+            id: 'delivery_status_notification',
+            return: 'headers',
+            notify: ['success', 'failure', 'delay'],
+            recipient: "subheaven.paulo@gmail.com"
+        }
     };
+
+    if ("cc" in _request) {
+        mailOptions["cc"] = _request.cc
+    }
 
     if (files.length > 0) {
         mailOptions["attachments"] = [];
-        for (i=0;i<files.length;i++) {
+        for (i = 0; i < files.length; i++) {
             mailOptions["attachments"].push({
+                filename: path.basename(files[i]),
                 path: files[i]
             });
         }
     }
 
-    console.log(mailOptions);
+    //console.log(mailOptions);
 
     dharmaEmail.transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.log(error);
-            res.status(400).send({success: false})
+            res.status(400).send({
+                success: false
+            })
         } else {
             console.log(info);
             res.status(200).send("That's all folks!");
         }
     });
-    // res.writeHead(200, {
-    //     'Connection': 'close'
-    // });
-    // res.end("That's all folks!");
 }
 
-dharmaEmail.prepareEmail = function(res, configname, files) {
-    fs.readFile(configname, function(err, f){
+dharmaEmail.prepareEmail = function (res, configname, files, html = "") {
+    fs.readFile(configname, function (err, f) {
         if (err != null) {
             console.log(err);
         }
@@ -144,7 +169,7 @@ dharmaEmail.prepareEmail = function(res, configname, files) {
         _config = JSON.parse(_str);
         console.log(_config);
         console.log(_config.dest);
-        dharmaEmail.sendEmailWithAttachment(res, _config, files);
+        dharmaEmail.sendEmailWithAttachment(res, _config, files, html = html);
     });
     // _str = fs.readFileSync(_confpath, 'utf8');
     // console.log("|" + _str + "|");
@@ -156,6 +181,7 @@ router.post('/', function (req, res, next) {
     console.log("============================================================");
     _uuid = uuid();
     _configname = "";
+    _htmlname = "";
     _files = [];
     let _temppath = path.join(__dirname, "..", "temp", _uuid);
     dharmaEmail.checkPath(_temppath);
@@ -174,6 +200,8 @@ router.post('/', function (req, res, next) {
 
         if (fieldname == "data") {
             _configname = _filepath;
+        } else if (fieldname == "html") {
+            _htmlname = _filepath;
         } else {
             _files.push(_filepath);
         }
@@ -204,7 +232,7 @@ router.post('/', function (req, res, next) {
         console.log("busboy.on.finish");
         console.log('Upload finalizado!');
         console.log("============================================================");
-        dharmaEmail.prepareEmail(res, _configname, _files);
+        dharmaEmail.prepareEmail(res, _configname, _files, html = _htmlname);
     });
     req.pipe(busboy);
 });
