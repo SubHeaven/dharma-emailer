@@ -108,6 +108,8 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
         try {
             let _df = fs.readFileSync(html, 'utf8');
             _html = _df.toString();
+            console.log("Uploaded HTML:");
+            console.log(_html);
         } catch (e) {
             console.log('Error:', e.stack);
         }
@@ -198,6 +200,7 @@ router.post('/', function (req, res, next) {
 
         let _filepath = path.join(_temppath, _filename);
 
+        console.log(fieldname)
         if (fieldname == "data") {
             _configname = _filepath;
         } else if (fieldname == "html") {
@@ -232,6 +235,8 @@ router.post('/', function (req, res, next) {
         console.log("busboy.on.finish");
         console.log('Upload finalizado!');
         console.log("============================================================");
+        console.log("html path:")
+        console.log("    " + _htmlname);
         dharmaEmail.prepareEmail(res, _configname, _files, html = _htmlname);
     });
     req.pipe(busboy);
