@@ -169,14 +169,8 @@ dharmaEmail.prepareEmail = function (res, configname, files, html = "") {
         }
         _str = f.toString();
         _config = JSON.parse(_str);
-        console.log(_config);
-        console.log(_config.dest);
         dharmaEmail.sendEmailWithAttachment(res, _config, files, html = html);
     });
-    // _str = fs.readFileSync(_confpath, 'utf8');
-    // console.log("|" + _str + "|");
-    // _request = JSON.parse(_str);
-    // console.log(_request);
 }
 
 router.post('/', function (req, res, next) {
