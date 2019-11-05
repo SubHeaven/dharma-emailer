@@ -109,7 +109,7 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
             let _df = fs.readFileSync(html, 'utf8');
             _html = _df.toString();
             console.log("Uploaded HTML:");
-            console.log(_html);
+            // console.log(_html);
         } catch (e) {
             console.log('Error:', e.stack);
         }
@@ -207,9 +207,9 @@ router.post('/', function (req, res, next) {
         console.log("Saving file to: " + _filepath);
         file.pipe(fs.createWriteStream(_filepath));
         file.on('data', function (data) {
-            // console.log("busboy.on.file.on.data");
-            // console.log("");
-            // console.log('File [' + fieldname + '] got ' + data.length + ' bytes');
+            console.log("busboy.on.file.on.data");
+            console.log("");
+            console.log('File [' + fieldname + '] got ' + data.length + ' bytes');
         });
         file.on('end', function () {
             console.log("busboy.on.file.on.end");
