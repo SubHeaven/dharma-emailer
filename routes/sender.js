@@ -3,14 +3,14 @@ const express = require('express');
 const fs = require('fs');
 const nodeMailer = require('nodemailer');
 const router = express.Router();
-const config = require('../config.json');
+// const config = require('../config.json');
 const path = require('path');
 const uuid = require("uuid/v4");
 var dharmaEmail = {};
 
 dharmaEmail.transporter = null;
 
-dharmaEmail.configSender = function () {
+dharmaEmail.configSender = function (config) {
     dharmaEmail.transporter = nodeMailer.createTransport({
         host: config.host,
         //port: 995,
@@ -22,7 +22,7 @@ dharmaEmail.configSender = function () {
         }
     });
 }
-dharmaEmail.configSender();
+// dharmaEmail.configSender();
 
 dharmaEmail.processTemplate = function (template, data) {
     try {
@@ -115,6 +115,15 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
         }
     }
 
+    let config;
+    if (_request.emitente == "iacon") {
+        config = require(`../config_${_request.emitente}.json`);
+    } else {
+        config = require('../config.json');
+    }
+    console.log(config)
+    dharmaEmail.configSender(config);
+
     console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
     console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
     console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -129,7 +138,7 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
             id: 'delivery_status_notification',
             return: 'headers',
             notify: ['success', 'failure', 'delay'],
-            recipient: "subheaven.paulo@gmail.com"
+            recipient: ""
         }
     };
 
