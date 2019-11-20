@@ -116,6 +116,7 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
     }
 
     let config;
+    console.log(`REQUEST EMITENTE ${_request.emitente}`);
     if (_request.emitente == "iacon") {
         config = require(`../config_${_request.emitente}.json`);
     } else {
