@@ -10,6 +10,9 @@ var usersRouter = require('./routes/users');
 var senderRouter = require('./routes/sender');
 var sendRouterTeste = require('./routes/senderteste');
 
+title = "Dharma Email Server"
+process.stdout.write("\033]0;" + title + "\007");
+
 var app = express();
 
 //app.use(logger('dev'));
