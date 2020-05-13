@@ -3,17 +3,20 @@ const express = require('express');
 const fs = require('fs');
 const nodeMailer = require('nodemailer');
 const router = express.Router();
-const config = require('../config.json');
+// const config = require('../config.json');
 const path = require('path');
 const uuid = require("uuid/v4");
+const Imap = require("imap");
+const mimemessage = require("mimemessage");
+
+
 var dharmaEmail = {};
 
 dharmaEmail.transporter = null;
 
-dharmaEmail.configSender = function () {
+dharmaEmail.configSender = function (config) {
     dharmaEmail.transporter = nodeMailer.createTransport({
         host: config.host,
-        //port: 995,
         port: config.port,
         ssl: config.secure, //true for 465 port, false for other ports
         auth: {
@@ -22,7 +25,7 @@ dharmaEmail.configSender = function () {
         }
     });
 }
-dharmaEmail.configSender();
+// dharmaEmail.configSender();
 
 dharmaEmail.processTemplate = function (template, data) {
     try {
@@ -109,14 +112,22 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
             let _df = fs.readFileSync(html, 'utf8');
             _html = _df.toString();
             console.log("Uploaded HTML:");
-            console.log(_html);
+            // console.log(_html);
         } catch (e) {
             console.log('Error:', e.stack);
         }
     }
 
-    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
-    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
+    let config;
+    console.log(`REQUEST EMITENTE ${_request.emitente}`);
+    if (_request.emitente == "iacon" || _request.emitente == "processos") {
+        config = require(`../config_${_request.emitente}.json`);
+    } else {
+        config = require('../config.json');
+    }
+    console.log(config)
+    dharmaEmail.configSender(config);
+
     console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
     console.log(JSON.stringify(_request, null, 4))
     console.log("++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -125,12 +136,12 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
         to: _request.dest, // list of receivers
         subject: _request.subject, // Subject line
         html: _html, // html body
-        dsn: {
-            id: 'delivery_status_notification',
-            return: 'headers',
-            notify: ['success', 'failure', 'delay'],
-            recipient: "subheaven.paulo@gmail.com"
-        }
+        // dsn: {
+        //     id: 'delivery_status_notification',
+        //     return: 'headers',
+        //     notify: ['success', 'failure', 'delay'],
+        //     recipient: ""
+        // }
     };
 
     if ("cc" in _request) {
@@ -151,11 +162,68 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
 
     dharmaEmail.transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
+            console.log("---> DEU ERRO <---")
             console.log(error);
             res.status(400).send({
                 success: false
             })
         } else {
+            console.log("CRIANDO NEW IMAP CONNECTION");
+            let imap = new Imap({
+                user: config.user,
+                password: config.pass,
+                host: config.host,
+                port: 993,
+                tls: true
+            });
+            
+            console.log("GOING TO READY STATE");
+            imap.once('ready', function () {
+                console.log("OPENING BOX");
+                imap.openBox('Itens Enviados', false, (err, box) => {
+                    if (err) throw err;
+
+                    const currentDate = new Date();
+
+                    console.log("--> MOVING E-MAIL TO SENT FOLDER")
+                    let msg, htmlEntity, plainEntity;
+                    msg = mimemessage.factory({
+                        contentType: 'multipart/alternate',
+                        body: []
+                    });
+                    htmlEntity = mimemessage.factory({
+                        contentType: 'text/html;charset=utf-8',
+                        body: mailOptions.html
+                    });
+                    // plainEntity = mimemessage.factory({
+                    //     body: mailOptions.text
+                    // });
+                    msg.header('Message-ID', info.messageId);
+                    msg.header('From', mailOptions.from);
+                    msg.header('To', mailOptions.to);
+                    msg.header('Subject', mailOptions.subject);
+                    msg.header('Date', currentDate);
+                    msg.body.push(htmlEntity);
+                    // msg.body.push(plainEntity);
+
+                    imap.append(msg.toString());
+
+                    console.log("<-- MOVED E-MAIL TO SENT FOLDER")
+                });
+            });
+            imap.once('error', function(err) {
+                console.log(`ERROR ==> ${err}`);
+            });
+
+            imap.once('end', function() {
+                console.log('CONNECTION ENDED');
+            });
+
+            console.log("CONNECTING...")
+            imap.connect();
+            console.log("CONNECTED")
+
+            console.log(`INFO:`);
             console.log(info);
             res.status(200).send("That's all folks!");
         }
@@ -207,9 +275,9 @@ router.post('/', function (req, res, next) {
         console.log("Saving file to: " + _filepath);
         file.pipe(fs.createWriteStream(_filepath));
         file.on('data', function (data) {
-            // console.log("busboy.on.file.on.data");
-            // console.log("");
-            // console.log('File [' + fieldname + '] got ' + data.length + ' bytes');
+            console.log("busboy.on.file.on.data");
+            console.log("");
+            console.log('File [' + fieldname + '] got ' + data.length + ' bytes');
         });
         file.on('end', function () {
             console.log("busboy.on.file.on.end");
