@@ -1,5 +1,6 @@
 {
     "host": "smtp.gmail.com",
+    "imap": "imap.gimal.com",
     "port": 465,
     "ssl": true,
     "name": "Sr. SubHeaven",

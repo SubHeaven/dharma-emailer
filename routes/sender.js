@@ -22,7 +22,7 @@ dharmaEmail.configSender = function (config) {
         auth: {
             user: config.user,
             pass: config.pass
-        }
+        },
     });
 }
 // dharmaEmail.configSender();
@@ -172,7 +172,7 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
             let imap = new Imap({
                 user: config.user,
                 password: config.pass,
-                host: config.host,
+                host: config.imap,
                 port: 993,
                 tls: true
             });
