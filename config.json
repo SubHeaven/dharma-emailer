@@ -1,5 +1,6 @@
 {
     "host": "mail.exchange.locaweb.com.br",
+    "imap": "mail.exchange.locaweb.com.br",
     "port": 587,
     "ssl": false,
     "name": "Soma Contabilidade",
