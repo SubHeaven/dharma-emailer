@@ -1,9 +1,9 @@
 {
-    "host": "mail.exchange.locaweb.com.br",
-    "imap": "mail.exchange.locaweb.com.br",
-    "port": 587,
+    "host": "",
+    "imap": "",
+    "port": 0,
     "ssl": false,
-    "name": "Soma Contabilidade",
-    "user": "faturamento@somacontabilidades.com.br",
-    "pass": "Soma1980"
+    "name": "",
+    "user": "",
+    "pass": ""
 }
