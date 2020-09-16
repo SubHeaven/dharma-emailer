@@ -168,60 +168,62 @@ dharmaEmail.sendEmailWithAttachment = function (res, _request, files, html = "")
                 success: false
             })
         } else {
-            console.log("CRIANDO NEW IMAP CONNECTION");
-            let imap = new Imap({
-                user: config.user,
-                password: config.pass,
-                host: config.imap,
-                port: 993,
-                tls: true
-            });
-            
-            console.log("GOING TO READY STATE");
-            imap.once('ready', function () {
-                console.log("OPENING BOX");
-                imap.openBox('Itens Enviados', false, (err, box) => {
-                    if (err) throw err;
-
-                    const currentDate = new Date();
-
-                    console.log("--> MOVING E-MAIL TO SENT FOLDER")
-                    let msg, htmlEntity, plainEntity;
-                    msg = mimemessage.factory({
-                        contentType: 'multipart/alternate',
-                        body: []
-                    });
-                    htmlEntity = mimemessage.factory({
-                        contentType: 'text/html;charset=utf-8',
-                        body: mailOptions.html
-                    });
-                    // plainEntity = mimemessage.factory({
-                    //     body: mailOptions.text
-                    // });
-                    msg.header('Message-ID', info.messageId);
-                    msg.header('From', mailOptions.from);
-                    msg.header('To', mailOptions.to);
-                    msg.header('Subject', mailOptions.subject);
-                    msg.header('Date', currentDate);
-                    msg.body.push(htmlEntity);
-                    // msg.body.push(plainEntity);
-
-                    imap.append(msg.toString());
-
-                    console.log("<-- MOVED E-MAIL TO SENT FOLDER")
+            if (config.host.indexOf('gmail') == -1) {
+                console.log("CRIANDO NEW IMAP CONNECTION");
+                let imap = new Imap({
+                    user: config.user,
+                    password: config.pass,
+                    host: config.imap,
+                    port: 993,
+                    tls: true
                 });
-            });
-            imap.once('error', function(err) {
-                console.log(`ERROR ==> ${err}`);
-            });
-
-            imap.once('end', function() {
-                console.log('CONNECTION ENDED');
-            });
-
-            console.log("CONNECTING...")
-            imap.connect();
-            console.log("CONNECTED")
+                
+                console.log("GOING TO READY STATE");
+                imap.once('ready', function () {
+                    console.log("OPENING BOX");
+                    imap.openBox('Itens Enviados', false, (err, box) => {
+                        if (err) throw err;
+    
+                        const currentDate = new Date();
+    
+                        console.log("--> MOVING E-MAIL TO SENT FOLDER")
+                        let msg, htmlEntity, plainEntity;
+                        msg = mimemessage.factory({
+                            contentType: 'multipart/alternate',
+                            body: []
+                        });
+                        htmlEntity = mimemessage.factory({
+                            contentType: 'text/html;charset=utf-8',
+                            body: mailOptions.html
+                        });
+                        // plainEntity = mimemessage.factory({
+                        //     body: mailOptions.text
+                        // });
+                        msg.header('Message-ID', info.messageId);
+                        msg.header('From', mailOptions.from);
+                        msg.header('To', mailOptions.to);
+                        msg.header('Subject', mailOptions.subject);
+                        msg.header('Date', currentDate);
+                        msg.body.push(htmlEntity);
+                        // msg.body.push(plainEntity);
+    
+                        imap.append(msg.toString());
+    
+                        console.log("<-- MOVED E-MAIL TO SENT FOLDER")
+                    });
+                });
+                imap.once('error', function(err) {
+                    console.log(`ERROR ==> ${err}`);
+                });
+    
+                imap.once('end', function() {
+                    console.log('CONNECTION ENDED');
+                });
+    
+                console.log("CONNECTING...")
+                imap.connect();
+                console.log("CONNECTED")
+            }
 
             console.log(`INFO:`);
             console.log(info);
